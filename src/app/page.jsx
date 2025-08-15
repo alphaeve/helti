@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import SearchPosts from "./SearchPosts";
-import { db } from "./lib/firebase";
+// import { db } from "./lib/firebase";
+import { db } from "../../lib/firebase";
+
 // import { db } from "../../../lib/firebase";
 
 import { collection, getDocs } from "firebase/firestore";
