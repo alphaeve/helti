@@ -2,23 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { db } from "../lib/firebase";
-// import { db } from "../../lib/firebase";
-
 import { doc, getDoc } from "firebase/firestore";
-import { remark } from "remark";
-import html from "remark-html";
+import { db } from "../lib/firebase";
+import styles from '../styles/BlogPage.module.css';
+import '../styles/gujarati-font.css'; // Noto Sans Gujarati
 
 export default function BlogPage() {
-  const { slug } = useParams();
-  const [post, setPost] = useState(null);
+  const { slug: rawSlug } = useParams();
+  const slug = decodeURIComponent(rawSlug);
 
-  const headings = [
-    { text: "Overview", emoji: "✅", background: "linear-gradient(to right, #bbf7d0, #4ade80)", color: "#14532d" },
-    { text: "Symptoms", emoji: "🩺", background: "linear-gradient(to right, #fecaca, #f87171)", color: "#7f1d1d" },
-    { text: "Causes", emoji: "⚠️", background: "linear-gradient(to right, #fef9c3, #fde047)", color: "#78350f" },
-    { text: "Prevention&Treatment", emoji: "💊", background: "linear-gradient(to right, #bfdbfe, #60a5fa)", color: "#1e3a8a" },
-  ];
+  const [post, setPost] = useState(null);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -26,50 +19,45 @@ export default function BlogPage() {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const data = docSnap.data();
-        const processed = await remark().use(html).process(data.content);
-        setPost({ ...data, contentHtml: processed.toString() });
+        setPost({ ...data, contentHtml: data.content });
+      } else {
+        setPost({ title: "Post not found", description: "", contentHtml: "" });
       }
     };
     fetchPost();
   }, [slug]);
 
   if (!post) return (
-    <p className="text-center text-gray-500 text-xl md:text-2xl mt-12">
-      Loading...
-    </p>
+    <p className="text-center text-gray-500 text-xl md:text-2xl mt-12">Loading...</p>
   );
 
   const processContent = (markdown) => {
+    const lines = markdown.split('\n');
     const parts = [];
-    let remaining = markdown;
 
-    headings.forEach((h) => {
-      const index = remaining.indexOf(h.text);
-      if (index !== -1) {
-        const before = remaining.slice(0, index).trim();
-        if (before) parts.push({ type: "text", content: before });
-        parts.push({ type: "heading", heading: h });
-        remaining = remaining.slice(index + h.text.length).trim();
+    lines.forEach((line) => {
+      const headingMatch = line.match(/^###\s*(.*)/);
+      if (headingMatch) {
+        parts.push({ type: 'heading', text: headingMatch[1] });
+      } else if (line.trim() !== '') {
+        parts.push({ type: 'text', content: line });
       }
     });
 
-    if (remaining) parts.push({ type: "text", content: remaining });
     return parts;
   };
 
   return (
-    <main className="bg-gray-50 min-h-screen flex justify-center px-4 py-12">
-      <div className="grid grid-cols-12 gap-6 w-full max-w-7xl">
+    <main className={styles.blogMain}>
+      <div className={styles.blogGrid}>
 
         {/* Left Ad Space */}
         <div className="hidden lg:block col-span-2">
-          <div className="bg-gray-200 rounded-lg h-full flex items-center justify-center text-gray-500">
-            Ad Space
-          </div>
+          <div className={styles.adSpace}>Ad Space</div>
         </div>
 
         {/* Blog Content */}
-        <article className="col-span-12 lg:col-span-8 bg-white rounded-2xl shadow-2xl p-14 leading-relaxed">
+        <article className={styles.blogArticle}>
 
           <h1 className="text-6xl md:text-7xl font-extrabold text-center mb-10 tracking-wide">
             {post.title}
@@ -82,18 +70,14 @@ export default function BlogPage() {
           <div className="max-w-none space-y-8 text-gray-900 leading-loose">
             {processContent(post.contentHtml).map((part, idx) =>
               part.type === "heading" ? (
-                <div
-                  key={idx}
-                  className="block px-6 py-4 rounded-2xl my-6 text-3xl md:text-4xl font-extrabold shadow-lg"
-                  style={{ background: part.heading.background, color: part.heading.color }}
-                >
-                  {part.heading.emoji} {part.heading.text}
+                <div key={idx} className={styles.headingBlock}>
+                  💠 {part.text}
                 </div>
               ) : (
                 <p
                   key={idx}
-                  className="text-lg md:text-xl text-gray-900 leading-relaxed mb-6"
-                  dangerouslySetInnerHTML={{ __html: part.content }}
+                  className={styles.blogParagraph}
+                  dangerouslySetInnerHTML={{ __html: part.content.replace(/\n/g, "<br/>") }}
                 />
               )
             )}
@@ -103,15 +87,140 @@ export default function BlogPage() {
 
         {/* Right Ad Space */}
         <div className="hidden lg:block col-span-2">
-          <div className="bg-gray-200 rounded-lg h-full flex items-center justify-center text-gray-500">
-            Ad Space
-          </div>
+          <div className={styles.adSpace}>Ad Space</div>
         </div>
 
       </div>
     </main>
   );
 }
+
+
+
+
+
+
+
+ 
+//  eng font
+
+
+
+
+// "use client";
+
+// import { useEffect, useState } from "react";
+// import { useParams } from "next/navigation";
+// import { db } from "../lib/firebase";
+// // import { db } from "../../lib/firebase";
+
+// import { doc, getDoc } from "firebase/firestore";
+// import { remark } from "remark";
+// import html from "remark-html";
+
+// export default function BlogPage() {
+//   const { slug } = useParams();
+//   const [post, setPost] = useState(null);
+
+//   const headings = [
+//     { text: "Overview", emoji: "✅", background: "linear-gradient(to right, #bbf7d0, #4ade80)", color: "#14532d" },
+//     { text: "Symptoms", emoji: "🩺", background: "linear-gradient(to right, #fecaca, #f87171)", color: "#7f1d1d" },
+//     { text: "Causes", emoji: "⚠️", background: "linear-gradient(to right, #fef9c3, #fde047)", color: "#78350f" },
+//     { text: "Prevention&Treatment", emoji: "💊", background: "linear-gradient(to right, #bfdbfe, #60a5fa)", color: "#1e3a8a" },
+//   ];
+
+//   useEffect(() => {
+//     const fetchPost = async () => {
+//       const docRef = doc(db, "blogs", slug);
+//       const docSnap = await getDoc(docRef);
+//       if (docSnap.exists()) {
+//         const data = docSnap.data();
+//         const processed = await remark().use(html).process(data.content);
+//         setPost({ ...data, contentHtml: processed.toString() });
+//       }
+//     };
+//     fetchPost();
+//   }, [slug]);
+
+//   if (!post) return (
+//     <p className="text-center text-gray-500 text-xl md:text-2xl mt-12">
+//       Loading...
+//     </p>
+//   );
+
+//   const processContent = (markdown) => {
+//     const parts = [];
+//     let remaining = markdown;
+
+//     headings.forEach((h) => {
+//       const index = remaining.indexOf(h.text);
+//       if (index !== -1) {
+//         const before = remaining.slice(0, index).trim();
+//         if (before) parts.push({ type: "text", content: before });
+//         parts.push({ type: "heading", heading: h });
+//         remaining = remaining.slice(index + h.text.length).trim();
+//       }
+//     });
+
+//     if (remaining) parts.push({ type: "text", content: remaining });
+//     return parts;
+//   };
+
+//   return (
+//     <main className="bg-gray-50 min-h-screen flex justify-center px-4 py-12">
+//       <div className="grid grid-cols-12 gap-6 w-full max-w-7xl">
+
+//         {/* Left Ad Space */}
+//         <div className="hidden lg:block col-span-2">
+//           <div className="bg-gray-200 rounded-lg h-full flex items-center justify-center text-gray-500">
+//             Ad Space
+//           </div>
+//         </div>
+
+//         {/* Blog Content */}
+//         <article className="col-span-12 lg:col-span-8 bg-white rounded-2xl shadow-2xl p-14 leading-relaxed">
+
+//           <h1 className="text-6xl md:text-7xl font-extrabold text-center mb-10 tracking-wide">
+//             {post.title}
+//           </h1>
+
+//           <p className="text-xl md:text-2xl text-gray-700 mb-12 text-center tracking-wide">
+//             {post.description}
+//           </p>
+
+//           <div className="max-w-none space-y-8 text-gray-900 leading-loose">
+//             {processContent(post.contentHtml).map((part, idx) =>
+//               part.type === "heading" ? (
+//                 <div
+//                   key={idx}
+//                   className="block px-6 py-4 rounded-2xl my-6 text-3xl md:text-4xl font-extrabold shadow-lg"
+//                   style={{ background: part.heading.background, color: part.heading.color }}
+//                 >
+//                   {part.heading.emoji} {part.heading.text}
+//                 </div>
+//               ) : (
+//                 <p
+//                   key={idx}
+//                   className="text-lg md:text-xl text-gray-900 leading-relaxed mb-6"
+//                   dangerouslySetInnerHTML={{ __html: part.content }}
+//                 />
+//               )
+//             )}
+//           </div>
+
+//         </article>
+
+//         {/* Right Ad Space */}
+//         <div className="hidden lg:block col-span-2">
+//           <div className="bg-gray-200 rounded-lg h-full flex items-center justify-center text-gray-500">
+//             Ad Space
+//           </div>
+//         </div>
+
+//       </div>
+//     </main>
+//   );
+// }
 
 
 
