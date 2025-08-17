@@ -30,7 +30,7 @@ export default function RootLayout({ children }) {
 
         {/* Footer */}
         <footer className="bg-white shadow-inner py-4 px-8 text-center text-gray-500 text-sm">
-          &copy; {new Date().getFullYear()} My App. All rights reserved.
+          &copy; {new Date().getFullYear()}  All rights reserved.
         </footer>
       </body>
     </html>

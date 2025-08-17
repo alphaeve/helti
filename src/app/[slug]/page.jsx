@@ -2,98 +2,102 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { doc, getDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import styles from '../styles/BlogPage.module.css';
-import '../styles/gujarati-font.css'; // Noto Sans Gujarati
+import { doc, getDoc } from "firebase/firestore";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-export default function BlogPage() {
-  const { slug: rawSlug } = useParams();
-  const slug = decodeURIComponent(rawSlug);
-
+export default function BlogPostPage() {
+  const { slug } = useParams();
   const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!slug) return;
+
+    const decodedSlug = decodeURIComponent(slug);
+
     const fetchPost = async () => {
-      const docRef = doc(db, "blogs", slug);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setPost({ ...data, contentHtml: data.content });
-      } else {
-        setPost({ title: "Post not found", description: "", contentHtml: "" });
+      try {
+        const docRef = doc(db, "blogs", decodedSlug);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setPost(docSnap.data());
+        } else {
+          console.error("No document found for slug:", decodedSlug);
+        }
+      } catch (error) {
+        console.error("Error fetching document:", error);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchPost();
   }, [slug]);
 
-  if (!post) return (
-    <p className="text-center text-gray-500 text-xl md:text-2xl mt-12">Loading...</p>
-  );
-
-  const processContent = (markdown) => {
-    const lines = markdown.split('\n');
-    const parts = [];
-
-    lines.forEach((line) => {
-      const headingMatch = line.match(/^###\s*(.*)/);
-      if (headingMatch) {
-        parts.push({ type: 'heading', text: headingMatch[1] });
-      } else if (line.trim() !== '') {
-        parts.push({ type: 'text', content: line });
-      }
-    });
-
-    return parts;
-  };
+  if (loading) return <p className="text-center py-10 text-gray-500">Loading...</p>;
+  if (!post) return <p className="text-center py-10 text-red-500">Post not found</p>;
 
   return (
-    <main className={styles.blogMain}>
-      <div className={styles.blogGrid}>
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-10">
+      {/* Title */}
+      {/* <h1 className="text-4xl font-extrabold text-gray-900 mb-4">{post.title}</h1> */}
 
-        {/* Left Ad Space */}
-        <div className="hidden lg:block col-span-2">
-          <div className={styles.adSpace}>Ad Space</div>
-        </div>
+      {/* Description */}
+      {/* <p className="text-xl text-gray-600 mb-8">{post.description}</p> */}
 
-        {/* Blog Content */}
-        <article className={styles.blogArticle}>
+      {/* Blog Content */}
+      <article className="space-y-8 max-w-4xl mx-auto p-6">
+  <h1 className="text-4xl font-extrabold mb-4 text-gray-900">{post.title}</h1>
+  {/* <p className="text-lg text-gray-600 mb-6">{post.description}</p> */}
 
-          <h1 className="text-6xl md:text-7xl font-extrabold text-center mb-10 tracking-wide">
-            {post.title}
-          </h1>
+  <ReactMarkdown
+    remarkPlugins={[remarkGfm]}
+    components={{
+      h2: ({ node, ...props }) => {
+        const headingText = props.children[0];
+        let bgClass = "bg-blue-50"; // default color
 
-          <p className="text-xl md:text-2xl text-gray-700 mb-12 text-center tracking-wide">
-            {post.description}
-          </p>
+        if (headingText.includes("Symptoms")) bgClass = "bg-red-50";
+        else if (headingText.includes("Causes")) bgClass = "bg-orange-50";
+        else if (headingText.includes("Treatment")) bgClass = "bg-green-50";
 
-          <div className="max-w-none space-y-8 text-gray-900 leading-loose">
-            {processContent(post.contentHtml).map((part, idx) =>
-              part.type === "heading" ? (
-                <div key={idx} className={styles.headingBlock}>
-                  💠 {part.text}
-                </div>
-              ) : (
-                <p
-                  key={idx}
-                  className={styles.blogParagraph}
-                  dangerouslySetInnerHTML={{ __html: part.content.replace(/\n/g, "<br/>") }}
-                />
-              )
-            )}
+        return (
+          <div className={`${bgClass} p-4 rounded-lg shadow-md mt-6 mb-4`}>
+            <h2 className="text-2xl font-bold text-gray-900" {...props} />
           </div>
+        );
+      },
+      p: ({ node, ...props }) => (
+        <p className="text-gray-700 mb-3 leading-relaxed" {...props} />
+      ),
+      li: ({ node, ...props }) => (
+        <li className="mb-2 ml-6 list-disc text-gray-700" {...props} />
+      ),
+    }}
+  >
+    {post.content}
+  </ReactMarkdown>
+</article>
 
-        </article>
 
-        {/* Right Ad Space */}
-        <div className="hidden lg:block col-span-2">
-          <div className={styles.adSpace}>Ad Space</div>
-        </div>
-
-      </div>
-    </main>
+    </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
